@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/cango.iml" filepath="$PROJECT_DIR$/cango.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-client/cango-client.iml" filepath="$PROJECT_DIR$/cango-client/cango-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-common/cango-common.iml" filepath="$PROJECT_DIR$/cango-common/cango-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-dto/cango-dto.iml" filepath="$PROJECT_DIR$/cango-dto/cango-dto.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-example/cango-example.iml" filepath="$PROJECT_DIR$/cango-example/cango-example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-instance/cango-instance.iml" filepath="$PROJECT_DIR$/cango-instance/cango-instance.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-message/cango-message.iml" filepath="$PROJECT_DIR$/cango-message/cango-message.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-model/cango-model.iml" filepath="$PROJECT_DIR$/cango-model/cango-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-server/cango-server.iml" filepath="$PROJECT_DIR$/cango-server/cango-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cango-service/cango-service.iml" filepath="$PROJECT_DIR$/cango-service/cango-service.iml" />
+    </modules>
+  </component>
+</project>
