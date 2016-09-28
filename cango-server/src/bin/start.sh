@@ -64,6 +64,10 @@ if [ -n "$DEPLOY_DIR" ]; then
   CANGO_OPTS=$CANGO_OPTS" -Dcango.docBase=$DEPLOY_DIR "
 fi
 
+if [ -n "$LOGS_DIR" ]; then
+  CANGO_OPTS=$CANGO_OPTS" -Dcango.logHome=$LOGS_DIR "
+fi
+
 echo -e "Starting the $SERVER_NAME ...\c"
 nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $CANGO_OPTS -classpath $CLASSPATH com.bella.cango.server.startUp.TomcatBootstrap >> $STDOUT_FILE 2>&1 &
 
