@@ -27,7 +27,7 @@ public class CangoClientTest {
     }
 
     @Test
-    public void testAdd() throws IOException {
+    public void testAdd() throws IOException, IllegalAccessException {
         CangoRequestDto cangoRequestDto = new CangoRequestDto();
         cangoRequestDto.setHost("192.168.0.113");
         final CangoResponseDto responseDto = cangoClient.request(RequestCommand.ADD, cangoRequestDto);

@@ -18,7 +18,7 @@ import java.util.HashSet;
 public class MainClass {
     public static void main(String[] args) {
         try {
-            String cangoHost = "192.168.0.113";
+            String cangoHost = "localhost";
             int cangoPort = 8080;
             String cangoAppName = "cango";
             CangoClient cangoClient = new CangoClient(cangoHost, cangoPort, cangoAppName);
@@ -38,7 +38,10 @@ public class MainClass {
                     })
                     .setBlackTables("test.company,db.*");   // 需要过滤的表
             CangoResponseDto responseDto = cangoClient.request(RequestCommand.ADD, cangoRequestDto);
+            System.out.println(responseDto);
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
     }

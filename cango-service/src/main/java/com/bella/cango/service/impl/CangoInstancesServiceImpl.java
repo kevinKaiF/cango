@@ -4,14 +4,13 @@ import com.bella.cango.entity.CangoInstances;
 import com.bella.cango.service.CangoInstancesService;
 import com.bella.cango.utils.ValidateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +79,8 @@ public class CangoInstancesServiceImpl implements CangoInstancesService {
     @Override
     public CangoInstances findByName(final CangoInstances cangoInstances) {
         String querySql = "select * from cango_instances where name = ?";
-        return jdbcTemplate.queryForObject(querySql, new Object[]{cangoInstances.getName()}, new BeanPropertyRowMapper<>(CangoInstances.class));
+        List<CangoInstances> cangoInstancesList = jdbcTemplate.query(querySql, new Object[]{cangoInstances.getName()}, new BeanPropertyRowMapper<>(CangoInstances.class));
+        return CollectionUtils.isEmpty(cangoInstancesList)? null : cangoInstancesList.get(0);
     }
 
     @Override
@@ -144,6 +144,24 @@ public class CangoInstancesServiceImpl implements CangoInstancesService {
             this.save(cangoInstances);
         } else {
             this.updateState(cangoInstances);
+        }
+    }
+
+    class CangoInstancesRowMapper implements RowMapper<CangoInstances> {
+        @Override
+        public CangoInstances mapRow(ResultSet resultSet, int i) throws SQLException {
+            CangoInstances cangoInstances = new CangoInstances();
+            cangoInstances.setName(resultSet.getString("name"));
+            cangoInstances.setDbName(resultSet.getString("db_name"));
+            cangoInstances.setDbType(resultSet.getInt("db_type"));
+            cangoInstances.setHost(resultSet.getString("host"));
+            cangoInstances.setUserName(resultSet.getString("username"));
+            cangoInstances.setPassword(resultSet.getString("password"));
+            cangoInstances.setSlaveId(resultSet.getInt("slave_id"));
+            cangoInstances.setState(resultSet.getInt("state"));
+            cangoInstances.setCreateTime(resultSet.getDate("create_time"));
+            cangoInstances.setUpdateTime(resultSet.getDate("update_time"));
+            return cangoInstances;
         }
     }
 }

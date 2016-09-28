@@ -9,6 +9,7 @@ import com.bella.cango.entity.CangoInstances;
 import com.bella.cango.entity.CangoTable;
 import com.bella.cango.enums.CangoRspStatus;
 import com.bella.cango.enums.DbType;
+import com.bella.cango.enums.OracleParamEnum;
 import com.bella.cango.enums.State;
 import com.bella.cango.instance.cache.CangoInstanceCache;
 import com.bella.cango.instance.mysql.MysqlInstance;
@@ -26,7 +27,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextStartedEvent;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -54,6 +56,7 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
 
     @Override
     public CangoResponseDto add(CangoRequestDto canalReqDto) {
+        canalReqDto.setName(CangoInstanceCache.createKey(canalReqDto.getHost(), canalReqDto.getPort()));
         //创建对象
         CangoInstances cangoInstances = new CangoInstances();
         BeanUtils.copyProperties(canalReqDto, cangoInstances);
@@ -159,7 +162,7 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
         //创建CanalInstance
         CanalParameter canalParameter = buildCanalParameter(cangoInstances);
         Canal canal = new Canal();
-        canal.setName(cangoInstances.getName());
+        canal.setName(getKey(cangoInstances));
         canal.setCanalParameter(canalParameter);
         return new MysqlInstance(canal);
     }
@@ -285,7 +288,7 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
                     String schema = black.substring(0, black.indexOf("."));
                     stringBuilder.append(schema).append("\\..*").append(",");
                 } else {
-                    String[] split = black.split(".");
+                    String[] split = black.split("\\.");
                     stringBuilder.append(split[0]).append("\\.").append(split[1]).append(",");
                 }
             }
@@ -392,24 +395,23 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
      *
      * @param cangoInstances
      */
-    private Map<String, Object> buildParams(final CangoInstances cangoInstances) {
-        Map<String, Object> params = new HashMap<String, Object>() {
+    private Map<OracleParamEnum, Object> buildParams(final CangoInstances cangoInstances) {
+        Map<OracleParamEnum, Object> params = new EnumMap<OracleParamEnum, Object>(OracleParamEnum.class) {
             {
-                put("db_username", cangoInstances.getUserName());
-                put("db_password", cangoInstances.getPassword());
-                put("db_url", "jdbc:oracle:thin:@" + cangoInstances.getHost() + ":" + cangoInstances.getPort() + ":" + cangoInstances.getDbName());
-
-                put("instance_name", cangoInstances.getName());
-                put("db_name", cangoInstances.getDbName());
-                put("db_host", cangoInstances.getHost());
-                put("db_port", cangoInstances.getPort());
+                put(OracleParamEnum.DB_USERNAME, cangoInstances.getUserName());
+                put(OracleParamEnum.DB_PASSWORD, cangoInstances.getPassword());
+                put(OracleParamEnum.DB_URL, "jdbc:oracle:thin:@" + cangoInstances.getHost() + ":" + cangoInstances.getPort() + ":" + cangoInstances.getDbName());
+                put(OracleParamEnum.INSTANCE_NAME, getKey(cangoInstances));
+                put(OracleParamEnum.DB_NAME, cangoInstances.getDbName());
+                put(OracleParamEnum.DB_HOST, cangoInstances.getHost());
+                put(OracleParamEnum.DB_PORT, cangoInstances.getPort());
             }
         };
 
         String blackTables = cangoInstances.getBlackTables();
         if (StringUtils.isNotBlank(blackTables)) {
             List<String> blackList = Arrays.asList(blackTables.split(","));
-            params.put("black_tables", filterTableList(blackList));
+            params.put(OracleParamEnum.BLACK_TABLES, filterTableList(blackList));
         }
         return params;
     }
@@ -677,53 +679,55 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
 
     @Override
     public synchronized CangoResponseDto stopAll() {
-        Map<String, MysqlInstance> canalInstanceMap = CangoInstanceCache.getMysqlInstanceMap();
+        Map<String, MysqlInstance> mysqlInstanceMap = CangoInstanceCache.getMysqlInstanceMap();
         Map<String, OracleInstance> oracleInstanceMap = CangoInstanceCache.getOracleInstanceMap();
 
-        try {
-            int canalInstanceSize = 0;
-            int oracleInstanceSize = 0;
-            if (!CollectionUtils.isEmpty(canalInstanceMap)) {
-                for (MysqlInstance mysqlInstance : canalInstanceMap.values()) {
-                    CangoInstances cangoInstances = new CangoInstances();
-                    cangoInstances.setName(mysqlInstance.getName());
-                    CangoInstances cangoInstancesPo = cangoInstancesService.findByName(cangoInstances);
-                    if (cangoInstancesPo != null) {
-                        if (State.START.getCode().equals(cangoInstancesPo.getState())) {
-                            cangoInstancesPo.setState(State.STOP.getCode());
-                            cangoInstancesPo.setUpdateTime(new Date());
-                            cangoInstancesService.updateState(cangoInstancesPo);
-                            int count = stopCanal(cangoInstancesPo, true);
-                            canalInstanceSize += count;
+        if (!CollectionUtils.isEmpty(mysqlInstanceMap) || !CollectionUtils.isEmpty(oracleInstanceMap)) {
+            try {
+                int canalInstanceSize = 0;
+                int oracleInstanceSize = 0;
+                if (!CollectionUtils.isEmpty(mysqlInstanceMap)) {
+                    for (MysqlInstance mysqlInstance : mysqlInstanceMap.values()) {
+                        CangoInstances cangoInstances = new CangoInstances();
+                        cangoInstances.setName(mysqlInstance.getName());
+                        CangoInstances cangoInstancesPo = cangoInstancesService.findByName(cangoInstances);
+                        if (cangoInstancesPo != null) {
+                            if (State.START.getCode().equals(cangoInstancesPo.getState())) {
+                                cangoInstancesPo.setState(State.STOP.getCode());
+                                cangoInstancesPo.setUpdateTime(new Date());
+                                cangoInstancesService.updateState(cangoInstancesPo);
+                                int count = stopCanal(cangoInstancesPo, true);
+                                canalInstanceSize += count;
+                            }
                         }
                     }
+
+                    mysqlInstanceMap.clear();
                 }
 
-                canalInstanceMap.clear();
-            }
-
-            if (!CollectionUtils.isEmpty(oracleInstanceMap)) {
-                for (OracleInstance oracleInstance : oracleInstanceMap.values()) {
-                    CangoInstances cangoInstances = new CangoInstances();
-                    cangoInstances.setName(oracleInstance.getName());
-                    CangoInstances cangoInstancesPo = cangoInstancesService.findByName(cangoInstances);
-                    if (cangoInstancesPo != null) {
-                        //当前处于可用状态
-                        if (State.START.getCode().equals(cangoInstancesPo.getState())) {
-                            cangoInstancesPo.setState(State.STOP.getCode());
-                            cangoInstancesPo.setUpdateTime(new Date());
-                            cangoInstancesService.updateState(cangoInstancesPo);
-                            stopYuGong(cangoInstancesPo);
-                            oracleInstanceSize++;
+                if (!CollectionUtils.isEmpty(oracleInstanceMap)) {
+                    for (OracleInstance oracleInstance : oracleInstanceMap.values()) {
+                        CangoInstances cangoInstances = new CangoInstances();
+                        cangoInstances.setName(oracleInstance.getName());
+                        CangoInstances cangoInstancesPo = cangoInstancesService.findByName(cangoInstances);
+                        if (cangoInstancesPo != null) {
+                            //当前处于可用状态
+                            if (State.START.getCode().equals(cangoInstancesPo.getState())) {
+                                cangoInstancesPo.setState(State.STOP.getCode());
+                                cangoInstancesPo.setUpdateTime(new Date());
+                                cangoInstancesService.updateState(cangoInstancesPo);
+                                stopYuGong(cangoInstancesPo);
+                                oracleInstanceSize++;
+                            }
                         }
                     }
-                }
 
-                oracleInstanceMap.clear();
+                    oracleInstanceMap.clear();
+                }
+                LOGGER.info("stopAll cangoInstance, count closed MysqlInstance number{}, OracleInstance number{}", canalInstanceSize, oracleInstanceSize);
+            } catch (Exception e) {
+                LOGGER.error("stopAll cangoInstance has an exception!", ExceptionUtils.getFullStackTrace(e.getCause()));
             }
-            LOGGER.info("stopAll cangoInstance, count closed MysqlInstance number{}, OracleInstance number{}", canalInstanceSize, oracleInstanceSize);
-        } catch (Exception e) {
-            LOGGER.error("stopAll cangoInstance has an exception!", ExceptionUtils.getFullStackTrace(e.getCause()));
         }
         return new CangoResponseDto().setStatus(CangoRspStatus.SUCCESS);
     }
@@ -749,7 +753,7 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
     @Override
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
         // 容器启动完成后装载之前已添加的实例
-        if (applicationEvent instanceof ContextStartedEvent) {
+        if (applicationEvent instanceof ContextRefreshedEvent) {
             LOGGER.info("spring container start all persisted cangoInstance!");
             CangoInstances condition = new CangoInstances();
             condition.setState(State.START.getCode());
@@ -764,6 +768,10 @@ public class CangoManagerServiceImpl implements CangoManagerService, Application
 
             LOGGER.info("spring container start all persisted cangoInstance successfully, count MysqlInstance number {}, OracleInstance number {}!",
                     countMysqlInstance, countOracleInstance);
+        }
+
+        if (applicationEvent instanceof ContextClosedEvent) {
+            shutdown();
         }
     }
 
