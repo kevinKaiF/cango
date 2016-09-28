@@ -1,6 +1,7 @@
 package com.bella.cango.instance.oracle;
 
 import com.bella.cango.enums.DbType;
+import com.bella.cango.enums.OracleParamEnum;
 import com.bella.cango.instance.oracle.applier.KafkaRecordApplier;
 import com.bella.cango.instance.oracle.applier.RecordApplier;
 import com.bella.cango.instance.oracle.common.YuGongConstants;
@@ -41,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class OracleInstance extends AbstractYuGongLifeCycle {
     private static Logger logger = LoggerFactory.getLogger(OracleInstance.class);
 
-    private final Map<String, Object> params;
+    private final Map<OracleParamEnum, Object> params;
     private final RunMode runMode = RunMode.ALL;
     private final DbType sourceDbType = DbType.ORACLE;
     private final int noUpdateThreshold = 3;
@@ -320,17 +321,17 @@ public class OracleInstance extends AbstractYuGongLifeCycle {
         context.setRunMode(runMode);
 
         // 手动添加的参数
-        context.setName((String) params.get("instance_name"));
-        context.setDbName((String) params.get("db_name"));
-        context.setDbHost((String) params.get("db_host"));
-        context.setDbPort((Integer) params.get("db_port"));
+        context.setName((String) params.get(OracleParamEnum.INSTANCE_NAME));
+        context.setDbName((String) params.get(OracleParamEnum.DB_NAME));
+        context.setDbHost((String) params.get(OracleParamEnum.DB_HOST));
+        context.setDbPort((Integer) params.get(OracleParamEnum.DB_PORT));
         return context;
     }
 
     private DataSource initDataSource() {
-        String username = (String) params.get("db_username");
-        String password = (String) params.get("db_password");
-        String url = (String) params.get("db_url");
+        String username = (String) params.get(OracleParamEnum.DB_USERNAME);
+        String password = (String) params.get(OracleParamEnum.DB_PASSWORD);
+        String url = (String) params.get(OracleParamEnum.DB_URL);
         DbType dbType = DbType.ORACLE;
         String poolSize = "30";
 
@@ -349,7 +350,7 @@ public class OracleInstance extends AbstractYuGongLifeCycle {
         logger.info("check source tables read privileges ...");
         String[] strArr = StringUtils.split(tableName, ".");
         List<Table> whiteTables = null;
-        List<String> blackTables = (List<String>) params.get("black_tables");
+        List<String> blackTables = (List<String>) params.get(OracleParamEnum.BLACK_TABLES);
         boolean ignoreSchema = false;
 
         if (strArr.length == 2 && !isBlackTable(tableName, blackTables)) {
