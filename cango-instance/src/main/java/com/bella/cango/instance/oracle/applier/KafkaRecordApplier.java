@@ -31,9 +31,11 @@ public class KafkaRecordApplier extends AbstractRecordApplier {
     }
 
     private void initKafkaService() {
-        synchronized (KafkaRecordApplier.class) {
-            if (kafkaProducer == null) {
-                kafkaProducer = KafkaProducer.Builder.getInstance();
+        if (kafkaProducer == null) {
+            synchronized (KafkaRecordApplier.class) {
+                if (kafkaProducer == null) {
+                    kafkaProducer = KafkaProducer.KafkaProducerHolder.getInstance();
+                }
             }
         }
     }

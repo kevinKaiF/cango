@@ -63,9 +63,11 @@ public class KafkaMysqlStore extends AbstractCanalStoreScavenge implements Canal
     }
 
     private void initKafkaService() {
-        synchronized (KafkaMysqlStore.class) {
-            if (kafkaProducer == null) {
-                kafkaProducer = KafkaProducer.Builder.getInstance();
+        if (kafkaProducer == null) {
+            synchronized (KafkaMysqlStore.class) {
+                if (kafkaProducer == null) {
+                    kafkaProducer = KafkaProducer.KafkaProducerHolder.getInstance();
+                }
             }
         }
     }
