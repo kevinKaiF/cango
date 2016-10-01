@@ -81,22 +81,22 @@ public class CangoRequestDto {
     /**
      * The Db type.
      *
-     * @描述:数据库类型
-     * @字段:db_type INT(10)
      */
     @NotNull
     private DbType dbType;
 
 
     /**
-     * The Slave id.
+     * 模拟mysql从库
      *
-     * @描述:模拟的从库id
-     * @字段:slave_id INT(10)
      */
     @NotNull
     private Integer slaveId;
 
+    /**
+     * 需要过滤的表库.
+     *
+     */
     private String blackTables;
 
 //    /**
