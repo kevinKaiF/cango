@@ -23,20 +23,22 @@ public class MainClass {
             String cangoAppName = "cango";
             CangoClient cangoClient = new CangoClient(cangoHost, cangoPort, cangoAppName);
             CangoRequestDto cangoRequestDto = new CangoRequestDto()
-                    .setHost("192.168.0.155")               // 设置数据库host
-                    .setPort(3306)                          // 设置数据库port
-                    .setDbName("test")                      // 设置schema
-                    .setDbType(DbType.MYSQL)                // 设置数据库类型
-                    .setSlaveId(3)                          // mysql必须设置
-                    .setUserName("root")                    // 数据库用户名
-                    .setPassword("root")                    // 数据库密码
-                    .setTableNames(new HashSet<String>() {  // 需要同步的表
+                    /* name自定义，且唯一*/
+                    .setName(CangoConstantName.DB1.getName())   // 设置实例名称
+                    .setHost("192.168.0.155")                   // 设置数据库host
+                    .setPort(3306)                              // 设置数据库port
+                    .setDbName("test")                          // 设置schema
+                    .setDbType(DbType.MYSQL)                    // 设置数据库类型
+                    .setSlaveId(3)                              // mysql必须设置
+                    .setUserName("root")                        // 数据库用户名
+                    .setPassword("root")                        // 数据库密码
+                    .setTableNames(new HashSet<String>() {      // 需要同步的表
                         {
                             add("test.user");
                             add("test.group");
                         }
                     })
-                    .setBlackTables("test.company,db.*");   // 需要过滤的表
+                    .setBlackTables("test.company,db.*");       // 需要过滤的表
             CangoResponseDto responseDto = cangoClient.request(RequestCommand.ADD, cangoRequestDto);
             System.out.println(responseDto);
         } catch (IOException e) {
@@ -45,4 +47,5 @@ public class MainClass {
             e.printStackTrace();
         }
     }
+
 }
