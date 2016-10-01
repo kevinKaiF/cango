@@ -1,6 +1,7 @@
 package com.bella.cango.dto;
 
 import com.bella.cango.enums.DbType;
+import com.bella.cango.validate.SlaveId;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import java.util.Set;
  * @author kevin
  * @date 2016/8/7
  */
+@SlaveId
 public class CangoRequestDto {
     /**
      * The constant serialVersionUID.
