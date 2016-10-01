@@ -14,6 +14,7 @@ import com.bella.cango.dto.CangoMsgDto;
 import com.bella.cango.dto.ColumnDto;
 import com.bella.cango.enums.EventType;
 import com.bella.cango.instance.mysql.MysqlInstance;
+import com.bella.cango.instance.mysql.MysqlParameter;
 import com.bella.cango.message.producer.KafkaProducer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.collections.CollectionUtils;
@@ -42,14 +43,14 @@ public class KafkaMysqlStore extends AbstractCanalStoreScavenge implements Canal
 
     private static KafkaProducer kafkaProducer;
 
-    protected CanalParameter parameters;
+    protected MysqlParameter parameters;
 
     protected String dbHost;
 
     protected int dbPort;
 
     public KafkaMysqlStore(CanalParameter parameters) {
-        this.parameters = parameters;
+        this.parameters = (MysqlParameter) parameters;
         initKafkaService();
         if (parameters != null) {
             List<InetSocketAddress> inetSocketAddresses = parameters.getDbAddresses();
@@ -120,14 +121,21 @@ public class KafkaMysqlStore extends AbstractCanalStoreScavenge implements Canal
     private void sendKafkaMsg(CanalEntry.RowData rowData, CanalEntry.Entry entry, CanalEntry.EventType eventType) {
         String schemaName = entry.getHeader().getSchemaName();
         String tableName = entry.getHeader().getTableName();
-        String key = CangoInstanceCache.createKey(dbHost, dbPort);
+        String key = parameters.getCanalName();
+
+        String executeTime = "";
+        try {
+            executeTime = new DateTime(entry.getHeader().getExecuteTime()).toString("yyyy-MM-dd HH:mm:ss");
+        } catch (Exception e) {
+            executeTime = "";
+        }
 
         LOGGER.info("mysqlInstance receive data，KEY:{}, EventType:{}, dbName:{}, tableName:{}, time:{}",
                 key,
                 eventType,
                 schemaName,
                 tableName,
-                new DateTime(entry.getHeader().getExecuteTime()).toString("yyyy-MM-dd HH:mm:ss"));
+                executeTime);
 
         MysqlInstance mysqlInstance = CangoInstanceCache.getMysqlInstance(key);
 

@@ -26,6 +26,7 @@ public class CangoRequestDto {
      * @描述:canal实例名称
      * @字段:name VARCHAR(50)
      */
+    @NotEmpty
     private String name;
 
 
