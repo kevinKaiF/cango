@@ -8,6 +8,5 @@ cango的作用是将canal和yuong整合到一个系统里，可以同步mysql数
 最后将同步到的数据发送到kafka。另外，cango能够注册多个canal实例和yugong实例。
 
 # TODO
-1. 每一个canal实例和yugong实例有name作为唯一识别标志，目前使用host和port拼接作为默认的name，是否需要让使用者自己定义name？
-2. yugong实例目前只支持增量，以后会增加全量
+1. yugong实例目前只支持增量，以后会增加全量
 
