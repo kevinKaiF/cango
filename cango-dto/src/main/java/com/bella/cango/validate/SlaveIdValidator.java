@@ -18,6 +18,7 @@ public class SlaveIdValidator implements ConstraintValidator<SlaveId, CangoReque
 
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean isValid(CangoRequestDto cangoRequestDto, ConstraintValidatorContext constraintValidatorContext) {
         if (DbType.MYSQL.equals(cangoRequestDto.getDbType())) {
